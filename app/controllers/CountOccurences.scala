@@ -18,12 +18,12 @@ class CountOccurences @Inject() extends Controller {
 			inptText
 			.map(wordOccurenceMap)
 			.getOrElse(Array[(String,Int)]())
-		val htmlResult: Html = htmlResultFromMapping(wordToNbOccur)
-		Ok(views.html.index(hostName=request.host, htmlResult))
+		val htmlResultStr: Html = htmlResultFromMapping(wordToNbOccur)
+		Ok(views.html.index(hostName=request.host, htmlResultStr, inptText.getOrElse("")))
 	}
 
         def wordOccurenceMap(text: String): Array[(String, Int)] = {
-                val wordsArray: Array[String] = text.split(" +")
+                val wordsArray: Array[String] = text.split("\\s+")
                 val wordsOccurences: Map[String, Int] =
                         wordsArray.groupBy(w => w.toLowerCase).mapValues(_.size)
                 wordsArray.map { w =>
@@ -31,12 +31,11 @@ class CountOccurences @Inject() extends Controller {
                 }
         }
 
+	/*this function builds the resulting coloured text from
+	* an array of the words of the text with the number of time they occur.
+	*/
 	def htmlResultFromMapping(wordToNbOccur: Array[(String, Int)]): Html = { 
 		val maxNbOccurs: Int = wordToNbOccur.maxBy(_._2)._2 
-		wordToNbOccur.foldLeft("") { case (str, (w, nb)) =>
-			str + " ("+w+","+nb+")"
-		}
-
 		val green: Float = 0.2f
 		val coloredText = wordToNbOccur.foldLeft("") { case (str, (w,nb)) =>
 			//computing the hue for each word
@@ -48,7 +47,17 @@ class CountOccurences @Inject() extends Controller {
 			val r = col.getRed()
 			val g = col.getGreen()
 			val b = col.getBlue()
-			str + s"""<div style="color:rgb($r,$g,$b)" class="wordDiv">$w </div>"""     
+			val strRgb = s"""color:rgb($r,$g,$b)"""
+			str + 
+				s"""
+				<div class="wordInfo">
+					<div style="$strRgb" class="wordDiv">
+						$w 
+					</div>
+					<div class="nbOcc coolBorder">
+						<div style="$strRgb">$nb occurences</div>
+					</div>
+				</div>"""     
 		}
 		
 		HtmlFormat.raw(coloredText)

@@ -1,7 +1,7 @@
 @import utils.WordInfos
 @import play.twirl.api.HtmlFormat._
 
-@(hostName: String, htmlResult: Html = HtmlFormat.raw(""))
+@(hostName: String, htmlResult: Html = HtmlFormat.raw(""), inputText: String = "")
 
 <!DOCTYPE html> 
 <html>
@@ -25,13 +25,20 @@
 
 		<script>
 				
-			document.getElementById("textSendButton")
+			//sends the input text to the server to process it 
+			//so to receive a coloured version of the text
+			document
+			.getElementById("textSendButton")
 			.addEventListener("click", function(event) {
 				var textInput = 
 					document.getElementById("textInput").value;
 				window.location = 
 					"http://@{hostName}/result?inptText="+textInput;
 			});
+
+			document
+			.getElementById("textInput")
+			.value='@inputText'
 		</script>
 	</body>
 </html>
