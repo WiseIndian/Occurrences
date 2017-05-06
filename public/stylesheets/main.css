@@ -1,0 +1,42 @@
+#wrapper {
+	margin: auto;
+	width: 50%;
+	font-family: arial;
+}
+
+#info {
+	text-align: center;
+}
+
+#textInput {
+	width: 100%;
+}
+
+#textSendButton {
+	display: block;
+	width: 100%;
+	background-color: white;
+	font: inherit;
+}
+
+.coolBorder {
+	border: solid green;
+}
+
+#result {
+	text-align: left;
+}
+
+.wordDiv {
+	display: inline;
+}
+
+
+
+
+
+
+
+
+
+

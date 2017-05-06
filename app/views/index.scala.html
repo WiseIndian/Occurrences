@@ -1,0 +1,37 @@
+@import utils.WordInfos
+@import play.twirl.api.HtmlFormat._
+
+@(hostName: String, htmlResult: Html = HtmlFormat.raw(""))
+
+<!DOCTYPE html> 
+<html>
+	<head>
+		<meta charset="utf-8"></meta>
+		<title>the website that tells you the words appearing the most in your text</title>
+		<link rel="stylesheet"
+			type="text/css" 
+			href='@routes.Assets.versioned("stylesheets/main.css")'>
+
+	</head>
+
+	<body>
+		<div id="wrapper">
+			<h3 id="info">enter your text here:</h3>
+			<textarea rows="6" id="textInput" class="coolBorder"></textarea>
+			<button id="textSendButton" class="coolBorder">send</button>
+			<div id="result">@htmlResult</div>
+		</div>
+
+
+		<script>
+				
+			document.getElementById("textSendButton")
+			.addEventListener("click", function(event) {
+				var textInput = 
+					document.getElementById("textInput").value;
+				window.location = 
+					"http://@{hostName}/result?inptText="+textInput;
+			});
+		</script>
+	</body>
+</html>
