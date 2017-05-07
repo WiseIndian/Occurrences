@@ -1,11 +1,20 @@
 package controllers
 
+import scala.collection.mutable.Buffer
 import javax.inject._
 import play.api._
 import play.api.mvc._
 import play.twirl.api._
 import java.awt.Color
 
+
+trait ImportantTextPart {
+	def content: String
+}
+case class Word (val content: String) extends ImportantTextPart 
+case class Punctuation (val content: String) extends ImportantTextPart 
+//this can be used for whatever substring that doesn't contain any Punctuation
+case class Other(val content: String) extends ImportantTextPart
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -14,45 +23,89 @@ import java.awt.Color
 @Singleton
 class CountOccurences @Inject() extends Controller {
 	def occurs(inptText: Option[String]) = Action { request => 
-		val wordToNbOccur: Array[(String, Int)] =
+		val wordToNbOccur: Seq[(ImportantTextPart, Int)] =
 			inptText
 			.map(wordOccurenceMap)
-			.getOrElse(Array[(String,Int)]())
+			.getOrElse(Seq[(ImportantTextPart,Int)]())
 		val htmlResultStr: Html = htmlResultFromMapping(wordToNbOccur)
 		Ok(views.html.index(hostName=request.host, htmlResultStr, inptText.getOrElse("")))
 	}
 
-        def wordOccurenceMap(text: String): Array[(String, Int)] = {
-                val wordsArray: Array[String] = text.split("\\s+")
+
+	//this function does the following on the following inputs:
+	/** s.equals("i am a man")
+	* output: Other("i am a man") :: Nil
+	*
+	* s.equals("hello world! this is me mario!!")
+	*output: Other("hello world") :: Punctuation("!") :: Other(" this is me mario") :: Punctuation("!") :: Punctuation("!") :: Nil
+	*/
+	
+	def separatePunctuation(s: String): Seq[ImportantTextPart] =  {
+		var lastSeenIndex = -1;
+		var result = Buffer[ImportantTextPart]()
+		(0 until s.length).foreach { i => 
+			if (s.substring(i,i+1).matches("\\p{Punct}")) {
+				if ((i-1) - lastSeenIndex > 0)
+					result += Other(s.substring(lastSeenIndex+1, i))
+				result += Punctuation(s.substring(i, i+1))
+				lastSeenIndex = i
+			} else if (i == s.length-1) {
+				result += Other(s.substring(lastSeenIndex+1, s.length))
+			}
+		}
+
+		result
+	}
+
+
+        def wordOccurenceMap(text: String): Seq[(ImportantTextPart, Int)] = {
+		val wordsAndPunctuation: Seq[ImportantTextPart] = 
+			separatePunctuation(text).flatMap {
+				case p: Punctuation => 
+					Array(p).toSeq
+				case Other(content) => 
+					val words = content.split("\\s+")
+					words.map(Word(_)).toSeq
+			}
+
                 val wordsOccurences: Map[String, Int] =
-                        wordsArray.groupBy(w => w.toLowerCase).mapValues(_.size)
-                wordsArray.map { w =>
-                        (w, wordsOccurences.getOrElse(w.toLowerCase, 0))
+                        wordsAndPunctuation
+			.groupBy(w => w.content.toLowerCase)
+			.mapValues(_.size)
+                wordsAndPunctuation.map { w =>
+                        (w, wordsOccurences.getOrElse(w.content.toLowerCase, 0))
                 }
         }
 
+	def colorForWord(nbOccur: Int, maxNbOccurs: Int): String = {
+		val green: Float = 0.2f
+		val greenRatio = 
+			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
+		val h = greenRatio * green
+		//finding the word color from the hue and arbitrary brightness and saturation parameter 
+		val col = Color.getHSBColor(h, 1f, 0.5f)
+		val r = col.getRed()
+		val g = col.getGreen()
+		val b = col.getBlue()
+		s"""color:rgb($r,$g,$b)"""
+	}
 	/*this function builds the resulting coloured text from
 	* an array of the words of the text with the number of time they occur.
 	*/
-	def htmlResultFromMapping(wordToNbOccur: Array[(String, Int)]): Html = { 
-		val maxNbOccurs: Int = wordToNbOccur.maxBy(_._2)._2 
-		val green: Float = 0.2f
-		val coloredText = wordToNbOccur.foldLeft("") { case (str, (w,nb)) =>
+	def htmlResultFromMapping(wordsToNbOccur: Seq[(ImportantTextPart, Int)]): Html = { 
+		val maxNbOccurs: Int = wordsToNbOccur.maxBy(_._2)._2 
+		val coloredText = wordsToNbOccur.foldLeft("") { case (str, (w,nb)) =>
 			//computing the hue for each word
-			val greenRatio = 
-				(maxNbOccurs - (nb-1)).toFloat / maxNbOccurs
-			val h = greenRatio * green
-			//finding the word color from the hue and arbitrary brightness and saturation parameter 
-			val col = Color.getHSBColor(h, 1f, 0.5f)
-			val r = col.getRed()
-			val g = col.getGreen()
-			val b = col.getBlue()
-			val strRgb = s"""color:rgb($r,$g,$b)"""
+			val strRgb = w match {
+				case Word(_) => colorForWord(nb, maxNbOccurs)
+				case Punctuation(_) => "color:rgb(0,0,0)"
+			}
+
 			str + 
 				s"""
 				<div class="wordInfo">
 					<div style="$strRgb" class="wordDiv">
-						$w 
+						${w.content}
 					</div>
 					<div class="nbOcc coolBorder">
 						<div style="$strRgb">$nb occurences</div>
