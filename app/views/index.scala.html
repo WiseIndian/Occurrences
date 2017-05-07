@@ -1,7 +1,7 @@
 @import utils.WordInfos
 @import play.twirl.api.HtmlFormat._
 
-@(hostName: String, htmlResult: Html = HtmlFormat.raw(""), inputText: String = "")
+@(hostName: String)
 
 <!DOCTYPE html> 
 <html>
@@ -19,7 +19,7 @@
 			<h3 id="info">enter your text here:</h3>
 			<textarea rows="6" id="textInput" class="coolBorder"></textarea>
 			<button id="textSendButton" class="coolBorder">send</button>
-			<div id="result">@htmlResult</div>
+			<div id="result"></div>
 		</div>
 
 
@@ -32,13 +32,20 @@
 			.addEventListener("click", function(event) {
 				var textInput = 
 					document.getElementById("textInput").value;
-				window.location = 
-					"http://@{hostName}/result?inptText="+textInput;
+				var str_json = JSON.stringify({text: textInput});
+				var request= new XMLHttpRequest()
+				request.open("POST", "http://@{hostName}/result", true);
+				request.setRequestHeader("Content-type", "application/json");
+				request.onreadystatechange = function() {
+					if (this.readyState == XMLHttpRequest.DONE 
+						&& this.status == 200)
+						document
+						.getElementById("result")
+						.innerHTML = this.response;
+				}
+				request.send(str_json);
 			});
 
-			document
-			.getElementById("textInput")
-			.value='@inputText'
 		</script>
 	</body>
 </html>

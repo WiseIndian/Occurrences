@@ -5,6 +5,7 @@ import javax.inject._
 import play.api._
 import play.api.mvc._
 import play.twirl.api._
+import play.api.libs.json._
 import java.awt.Color
 
 
@@ -16,19 +17,35 @@ case class Punctuation (val content: String) extends ImportantTextPart
 //this can be used for whatever substring that doesn't contain any Punctuation
 case class Other(val content: String) extends ImportantTextPart
 
+case class InputText(text: String)
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
 class CountOccurences @Inject() extends Controller {
-	def occurs(inptText: Option[String]) = Action { request => 
+	implicit val InputTextReads: Reads[InputText] =
+		Json.reads[InputText]
+
+	def occurs() = Action(BodyParsers.parse.json) { request => 
+		val textResult: JsResult[InputText] = 
+			request.body.validate[InputText]
+
+		val textOpt: Option[String] = textResult.asOpt.map(_.text)
 		val wordToNbOccur: Seq[(ImportantTextPart, Int)] =
-			inptText
-			.map(wordOccurenceMap)
-			.getOrElse(Seq[(ImportantTextPart,Int)]())
-		val htmlResultStr: Html = htmlResultFromMapping(wordToNbOccur)
-		Ok(views.html.index(hostName=request.host, htmlResultStr, inptText.getOrElse("")))
+			textOpt	
+			.map (t => wordOccurenceMap(t))
+			.getOrElse {
+				System.err.println("wrong json input")
+				Seq[(ImportantTextPart, Int)]()
+			}
+		val htmlResult: String = htmlResultFromMapping(wordToNbOccur)
+
+		Ok(htmlResult)
+	}
+
+	def homepage() = Action { request => 
+		Ok(views.html.index(hostName=request.host))
 	}
 
 
@@ -92,9 +109,10 @@ class CountOccurences @Inject() extends Controller {
 	/*this function builds the resulting coloured text from
 	* an array of the words of the text with the number of time they occur.
 	*/
-	def htmlResultFromMapping(wordsToNbOccur: Seq[(ImportantTextPart, Int)]): Html = { 
+	def htmlResultFromMapping(wordsToNbOccur: Seq[(ImportantTextPart, Int)]): String = { 
 		val maxNbOccurs: Int = wordsToNbOccur.maxBy(_._2)._2 
-		val coloredText = wordsToNbOccur.foldLeft("") { case (str, (w,nb)) =>
+
+		wordsToNbOccur.foldLeft("") { case (str, (w,nb)) =>
 			//computing the hue for each word
 			val strRgb = w match {
 				case Word(_) => colorForWord(nb, maxNbOccurs)
@@ -112,7 +130,5 @@ class CountOccurences @Inject() extends Controller {
 					</div>
 				</div>"""     
 		}
-		
-		HtmlFormat.raw(coloredText)
 	}
 }
