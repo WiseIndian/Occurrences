@@ -110,7 +110,9 @@ class CountOccurences @Inject() extends Controller {
 	* an array of the words of the text with the number of time they occur.
 	*/
 	def htmlResultFromMapping(wordsToNbOccur: Seq[(ImportantTextPart, Int)]): String = { 
-		val maxNbOccurs: Int = wordsToNbOccur.maxBy(_._2)._2 
+		val maxNbOccurs: Int = 
+			if (wordsToNbOccur.isEmpty) 0
+			else wordsToNbOccur.maxBy(_._2)._2 
 
 		wordsToNbOccur.foldLeft("") { case (str, (w,nb)) =>
 			//computing the hue for each word
