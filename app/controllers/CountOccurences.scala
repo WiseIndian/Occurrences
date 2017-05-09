@@ -100,7 +100,7 @@ class CountOccurences @Inject() extends Controller {
 			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
 		val h = greenRatio * green
 		//finding the word color from the hue and arbitrary brightness and saturation parameter 
-		val col = Color.getHSBColor(h, 1f, 0.5f)
+		val col = Color.getHSBColor(h, 1f, .9f)
 		val r = col.getRed()
 		val g = col.getGreen()
 		val b = col.getBlue()
