@@ -1,5 +1,6 @@
 @import utils.WordInfos
 @import play.twirl.api.HtmlFormat._
+@import scala.io.Source
 
 @(hostName: String)
 
@@ -22,8 +23,12 @@
 			<div id="result"></div>
 		</div>
 	
-		<h5 id="meInfo">by <a href="https://www.linkedin.com/in/simon-le-bail-collet-a6767212b">Simon Le Bail-Collet</a></h5>
-
+		<div id="footer"> 
+			<h5 id="meInfo" class="footerChild">by <a href="https://www.linkedin.com/in/simon-le-bail-collet-a6767212b">Simon Le Bail-Collet</a></h5>
+			<a href="https://github.com/simonchelbc/WordsOccurences" class="footerChild">
+				@{HtmlFormat.raw(scala.io.Source.fromFile("public/images/github.svg").mkString)}
+			</a>
+		</div>
 
 		<script>
 				
@@ -70,7 +75,8 @@
 					.style
 					.height = h;
 				};
-
+			
+				// the size of the content of the wrapper
 				var wrapperHeight =
 					document
 					.getElementById(elementAboveOwnerInfo)
@@ -82,12 +88,23 @@
 					var newH = 
 						(wrapperHeight + 10) + "px";
 					setHeightElemAboveInfo(newH);
+					/* this impeach that the result text will be over the
+					 * the footer. Indeed if we don't remove the bottom property 
+				 	 * no space is added between the footer and the wrapper. 
+					 */
+					var footerChilds =
+						document
+						.getElementsByClassName("footerChild");
+					for (var i=0; i < footerChilds.length; i++) {
+						footerChilds[i].style.bottom = "auto";
+					}
 				} else {
 					var newH = windowBottom + "px";
 					setHeightElemAboveInfo(newH);
 				}
 			};
 	
+			/*some responsive design for small screens*/
 			var setWrapperWidth = function(wWidth) {
 				if (wWidth < 300) {
 					document

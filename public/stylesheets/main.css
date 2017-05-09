@@ -54,13 +54,35 @@ body {
 	display: inline;
 }
 
-#meInfo {
-	color: #535252;
+.footerChild {
+	position: absolute;
+	margin: 0;
+	bottom: 0;
 }
 
+#meInfo {
+	color: #535252;
+	left: 0px;
+	font-size: 12px;
+}
+
+/*the text linking to linkedin*/ 
 #meInfo a {
 	color: inherit;
 }
+
+a.footerChild  {
+	right: 0px;	
+}
+
+/*the github repo svg*/
+.footerChild svg {
+	height: 15px;
+	width: 15px;
+}
+
+
+
 
 
 
