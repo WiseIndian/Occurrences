@@ -71,14 +71,16 @@ body {
 	color: inherit;
 }
 
-a.footerChild  {
+
+a.footerChild {
 	right: 0px;	
 }
 
 /*the github repo svg*/
-.footerChild svg {
+.footerChild object {
 	height: 15px;
 	width: 15px;
+	pointer-events: none;
 }
 
 

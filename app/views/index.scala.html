@@ -25,8 +25,12 @@
 	
 		<div id="footer"> 
 			<h5 id="meInfo" class="footerChild">by <a href="https://www.linkedin.com/in/simon-le-bail-collet-a6767212b">slbc</a></h5>
-			<a href="https://github.com/simonchelbc/WordsOccurences" class="footerChild">
-				@{HtmlFormat.raw(scala.io.Source.fromFile("public/images/github.svg").mkString)}
+			<!--there should be a link inside of the svg to the github homepage-->
+			<a href="https://github.com/simonchelbc/Occurrences" class="footerChild">
+				<object  
+					data="@routes.Assets.versioned("images/github.svg")"
+					type="image/svg">
+				</object>
 			</a>
 		</div>
 
