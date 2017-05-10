@@ -45,7 +45,7 @@
 					document.getElementById("textInput").value;
 				var str_json = JSON.stringify({text: textInput});
 				var request= new XMLHttpRequest()
-				request.open("POST", "http://@{hostName}/result", true);
+				request.open("POST", location.protocol+"//@{hostName}/result", true);
 				request.setRequestHeader("Content-type", "application/json");
 				request.onreadystatechange = function() {
 					if (this.readyState == XMLHttpRequest.DONE 
@@ -56,7 +56,6 @@
 
 						positionObjects();
 					}
-					
 				}
 				request.send(str_json);
 			});
