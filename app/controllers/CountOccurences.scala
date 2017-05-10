@@ -6,7 +6,12 @@ import play.api._
 import play.api.mvc._
 import play.twirl.api._
 import play.api.libs.json._
+import scala.io.Source
 import java.awt.Color
+import services.Logger
+
+
+
 
 
 trait ImportantTextPart {
@@ -18,12 +23,14 @@ case class Punctuation (val content: String) extends ImportantTextPart
 case class Other(val content: String) extends ImportantTextPart
 
 case class InputText(text: String)
+
+
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
-class CountOccurences @Inject() extends Controller {
+class CountOccurences @Inject()(logger: Logger) extends Controller {
 	implicit val InputTextReads: Reads[InputText] =
 		Json.reads[InputText]
 
@@ -32,6 +39,12 @@ class CountOccurences @Inject() extends Controller {
 			request.body.validate[InputText]
 
 		val textOpt: Option[String] = textResult.asOpt.map(_.text)
+
+		//logging text
+		textOpt.foreach { t =>
+			logger.log(t, "logFile")
+		}
+
 		val wordToNbOccur: Seq[(ImportantTextPart, Int)] =
 			textOpt	
 			.map (t => wordOccurenceMap(t))
@@ -40,13 +53,14 @@ class CountOccurences @Inject() extends Controller {
 				Seq[(ImportantTextPart, Int)]()
 			}
 		val htmlResult: String = htmlResultFromMapping(wordToNbOccur)
-
+		
 		Ok(htmlResult)
 	}
 
 	def homepage() = Action { request => 
 		Ok(views.html.index(hostName=request.host))
 	}
+
 
 
 	//this function does the following on the following inputs:
