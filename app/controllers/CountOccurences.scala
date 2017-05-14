@@ -1,5 +1,7 @@
 package controllers
 
+
+import util.parsing.combinator.RegexParsers
 import scala.collection.mutable.Buffer
 import javax.inject._
 import play.api._
@@ -11,19 +13,142 @@ import java.awt.Color
 import services.Logger
 
 
-
-
-
 trait ImportantTextPart {
 	def content: String
 }
-case class Word (val content: String) extends ImportantTextPart 
-case class Punctuation (val content: String) extends ImportantTextPart 
-//this can be used for whatever substring that doesn't contain any Punctuation
-case class Other(val content: String) extends ImportantTextPart
+case class Word (val content: String, nbOccur: Int) extends ImportantTextPart 
+case class Punctuations (val content: String) extends ImportantTextPart 
+case class Spaces(val content: String) extends ImportantTextPart
 
 case class InputText(text: String)
 
+
+
+class TextParser extends RegexParsers {
+	override def skipWhitespace = false 
+
+	lazy val spacesParser1: Parser[Spaces] = "\\s+".r ^^ { s => Spaces(s) }
+	lazy val punctuation: Parser[Punctuations] = "\\p{Punct}+".r ^^ { s => Punctuations(s) }
+	lazy val word: Parser[Word] = "[^\\s\\p{Punct}]+".r ^^ { s => Word(s, 1) }
+	lazy val token: Parser[ImportantTextPart] = spacesParser1 ||| word ||| punctuation
+	lazy val textParser: Parser[List[ImportantTextPart]] = rep(token)
+
+        def wordOccurrenceMap(text: String): Seq[ImportantTextPart] = {
+		val parts: List[ImportantTextPart] = parseAll(textParser, text) match {
+			case Success(e, _) => 
+				e
+			case f: NoSuccess => 
+				System.err.println(f)
+				List[ImportantTextPart]()	
+		}
+
+		//the different words to the number of their occurrences
+                val wordsOccurrences: Map[String, Int] =
+			parts
+			.filter{ 
+				case w: Word => true 
+				case _ => false
+			}
+			.groupBy(w => w.content.toLowerCase)
+			.mapValues(_.size)
+
+                parts.map { 
+			case Word(content, _) =>
+				val wNbOcc = 
+					wordsOccurrences
+					.getOrElse(content.toLowerCase, 0)
+				Word(content, wNbOcc)
+			case other => other
+                }
+        }
+
+	def colorForWord(nbOccur: Int, maxNbOccurs: Int): Color = {
+		val green: Float = 0.2f
+		val greenRatio = 
+			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
+		val h = greenRatio * green
+		//finding the word color from the hue and arbitrary brightness and saturation parameter 
+		Color.getHSBColor(h, 1f, .9f)
+	}
+
+
+	def wordInfoDiv(w: Word, wordColor: Color): String = {
+		val r = wordColor.getRed()
+		val g = wordColor.getGreen()
+		val b = wordColor.getBlue()
+		val strRgb = s"""color:rgb($r,$g,$b)"""
+
+		s"""
+		<div class="wordInfo">
+			<div style="$strRgb" class="wordDiv">
+				${w.content}
+			</div>
+			<div class="nbOcc coolBorder">
+				<div style="$strRgb">${w.nbOccur} occurences</div>
+			</div>
+		</div>"""
+	}
+
+	def convertNewlinesToBr(ls: List[String]): String =  
+		ls.foldLeft(""){ case (str,_) => str+"<br>" }
+	def convertTabs(ls: List[String]): String =
+		ls.foldLeft(""){ case(str,_) => str+"&nbsp&nbsp&nbsp&nbsp&nbsp" }
+	def convertWhiteSpaces(ls: List[String]): String = 
+		ls.foldLeft("") { case(str,_) => str + "&nbsp" }
+	//could do a parser for vertical tab but who cares about this character?	
+	def convertFormFeed(ls: List[String]): String = 
+		ls.foldLeft("") { case (str,_) => str + "<br><br>" }
+
+	lazy val lf: Parser[String] = rep1("\n") ^^ { convertNewlinesToBr }
+	lazy val crlf: Parser[String] = rep1("\r\n") ^^ { convertNewlinesToBr }
+	lazy val cr: Parser[String] = rep1("\r") ^^ { convertNewlinesToBr } // for old macintoshs
+	lazy val tabs: Parser[String] = rep1("\t") ^^ { convertTabs }
+	lazy val whiteSpaces: Parser[String] = rep1(" ") ^^ { convertWhiteSpaces }
+	lazy val formFeeds: Parser[String] = rep1("\f") ^^ { convertFormFeed }
+	
+	lazy val spacesParser2: Parser[String] = 
+		rep1(lf ||| crlf ||| cr ||| tabs ||| whiteSpaces ||| formFeeds) ^^ {
+			ls => ls.mkString
+		}
+
+
+	def whitespaceConverter(s: String): String = {
+		parseAll(spacesParser2, s) match {
+			case Success(e, rest) => 
+				e
+			case f: NoSuccess => 
+				System.err.println(f)
+				""
+		}
+	}
+
+	/*this function builds the resulting coloured text from
+	* an array of the words of the text with the number of time they occur.
+	*/
+	def htmlResultFromMapping(tokens: Seq[ImportantTextPart]): String = { 
+		val maxNbOccurs: Int = 
+			if (tokens.isEmpty) 
+				0
+			else 
+				tokens	
+				.flatMap{
+					case w: Word => Some(w.nbOccur)
+					case _ => None
+				}.max
+
+		val black = "color:rgb(0,0,0)"
+
+		tokens.foldLeft("") { 
+			case (str, w @ Word(_, nbOccur)) => 
+				val col = colorForWord(nbOccur, maxNbOccurs)
+				str + wordInfoDiv(w, col)
+			case (str, Punctuations(content)) => 
+				s"""$str<div style="$black; display:inline;">$content</div>"""
+			case (str, Spaces(content)) => 
+				str + whitespaceConverter(content)
+		}
+	}
+}
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -33,6 +158,8 @@ case class InputText(text: String)
 class CountOccurences @Inject()(logger: Logger) extends Controller {
 	implicit val InputTextReads: Reads[InputText] =
 		Json.reads[InputText]
+
+	val textParser: TextParser = new TextParser()
 
 	def occurs() = Action(BodyParsers.parse.json) { request => 
 		val textResult: JsResult[InputText] = 
@@ -45,16 +172,15 @@ class CountOccurences @Inject()(logger: Logger) extends Controller {
 			logger.log(t, "logFile")
 		}
 
-		val wordToNbOccur: Seq[(ImportantTextPart, Int)] =
-			textOpt	
-			.map (t => wordOccurenceMap(t))
-			.getOrElse {
-				System.err.println("wrong json input")
-				Seq[(ImportantTextPart, Int)]()
-			}
-		val htmlResult: String = htmlResultFromMapping(wordToNbOccur)
-		
-		Ok(htmlResult)
+		textOpt	
+		.map { t =>
+			val wordToNbOccur = textParser.wordOccurrenceMap(t)
+			val htmlResult = textParser.htmlResultFromMapping(wordToNbOccur)
+			Ok(htmlResult)
+		}
+		.getOrElse {
+			Ok("")	
+		}
 	}
 
 	def homepage() = Action { request => 
@@ -62,89 +188,4 @@ class CountOccurences @Inject()(logger: Logger) extends Controller {
 	}
 
 
-
-	//this function does the following on the following inputs:
-	/** s.equals("i am a man")
-	* output: Other("i am a man") :: Nil
-	*
-	* s.equals("hello world! this is me mario!!")
-	*output: Other("hello world") :: Punctuation("!") :: Other(" this is me mario") :: Punctuation("!") :: Punctuation("!") :: Nil
-	*/
-	
-	def separatePunctuation(s: String): Seq[ImportantTextPart] =  {
-		var lastSeenIndex = -1;
-		var result = Buffer[ImportantTextPart]()
-		(0 until s.length).foreach { i => 
-			if (s.substring(i,i+1).matches("\\p{Punct}")) {
-				if ((i-1) - lastSeenIndex > 0)
-					result += Other(s.substring(lastSeenIndex+1, i))
-				result += Punctuation(s.substring(i, i+1))
-				lastSeenIndex = i
-			} else if (i == s.length-1) {
-				result += Other(s.substring(lastSeenIndex+1, s.length))
-			}
-		}
-
-		result
-	}
-
-
-        def wordOccurenceMap(text: String): Seq[(ImportantTextPart, Int)] = {
-		val wordsAndPunctuation: Seq[ImportantTextPart] = 
-			separatePunctuation(text).flatMap {
-				case p: Punctuation => 
-					Array(p).toSeq
-				case Other(content) => 
-					val words = content.split("\\s+")
-					words.map(Word(_)).toSeq
-			}
-
-                val wordsOccurences: Map[String, Int] =
-                        wordsAndPunctuation
-			.groupBy(w => w.content.toLowerCase)
-			.mapValues(_.size)
-                wordsAndPunctuation.map { w =>
-                        (w, wordsOccurences.getOrElse(w.content.toLowerCase, 0))
-                }
-        }
-
-	def colorForWord(nbOccur: Int, maxNbOccurs: Int): String = {
-		val green: Float = 0.2f
-		val greenRatio = 
-			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
-		val h = greenRatio * green
-		//finding the word color from the hue and arbitrary brightness and saturation parameter 
-		val col = Color.getHSBColor(h, 1f, .9f)
-		val r = col.getRed()
-		val g = col.getGreen()
-		val b = col.getBlue()
-		s"""color:rgb($r,$g,$b)"""
-	}
-	/*this function builds the resulting coloured text from
-	* an array of the words of the text with the number of time they occur.
-	*/
-	def htmlResultFromMapping(wordsToNbOccur: Seq[(ImportantTextPart, Int)]): String = { 
-		val maxNbOccurs: Int = 
-			if (wordsToNbOccur.isEmpty) 0
-			else wordsToNbOccur.maxBy(_._2)._2 
-
-		wordsToNbOccur.foldLeft("") { case (str, (w,nb)) =>
-			//computing the hue for each word
-			val strRgb = w match {
-				case Word(_) => colorForWord(nb, maxNbOccurs)
-				case Punctuation(_) => "color:rgb(0,0,0)"
-			}
-
-			str + 
-				s"""
-				<div class="wordInfo">
-					<div style="$strRgb" class="wordDiv">
-						${w.content}
-					</div>
-					<div class="nbOcc coolBorder">
-						<div style="$strRgb">$nb occurences</div>
-					</div>
-				</div>"""     
-		}
-	}
 }
