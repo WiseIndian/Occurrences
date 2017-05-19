@@ -24,7 +24,41 @@ case class InputText(text: String)
 
 
 
+object ColorUtils {
+	import java.lang.Math._
+	def greenToRedGiver(maxNbOccurs: Int)(nbOccur: Int): Color = 
+		redToColderColorGiverLogarithmic(0.2f)(maxNbOccurs)(nbOccur)
+
+	def blueToRedGiver(maxNbOccurs: Int)(nbOccur: Int): Color = 
+		redToColderColorGiverLogarithmic(0.7f)(maxNbOccurs)(nbOccur)
+
+	def redToColderColorGiverLogarithmic(colderColorHue: Float)(maxNbOccurs: Int)(nbOccur: Int): Color = {
+		val k: Float = (colderColorHue / log(maxNbOccurs)).toFloat
+		
+		val h = {
+			colderColorHue - k * log(nbOccur)
+		}.toFloat
+		//finding the word color from the hue and arbitrary brightness and saturation parameter 
+		Color.getHSBColor(h, 1f, .9f)
+	}
+
+	def redToColderColorGiverLinear(colderColorHue: Float)(nbOccur: Int, maxNbOccurs: Int): Color = {
+		/*
+		* the more occurrences there is, the redder the word becomes.
+		* the words with the least occurences are blue.
+		*/
+		val colderColorRatio = 
+			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
+		val h = colderColorRatio * colderColorHue
+		//finding the word color from the hue and arbitrary brightness and saturation parameter 
+		Color.getHSBColor(h, 1f, .9f)
+	}
+
+
+}
+
 class TextParser extends RegexParsers {
+
 	override def skipWhitespace = false 
 
 	lazy val spacesParser1: Parser[Spaces] = "\\s+".r ^^ { s => Spaces(s) }
@@ -62,14 +96,7 @@ class TextParser extends RegexParsers {
                 }
         }
 
-	def colorForWord(nbOccur: Int, maxNbOccurs: Int): Color = {
-		val green: Float = 0.2f
-		val greenRatio = 
-			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
-		val h = greenRatio * green
-		//finding the word color from the hue and arbitrary brightness and saturation parameter 
-		Color.getHSBColor(h, 1f, .9f)
-	}
+
 
 
 	def wordInfoDiv(w: Word, wordColor: Color): String = {
@@ -125,7 +152,7 @@ class TextParser extends RegexParsers {
 	/*this function builds the resulting coloured text from
 	* an array of the words of the text with the number of time they occur.
 	*/
-	def htmlResultFromMapping(tokens: Seq[ImportantTextPart]): String = { 
+	def htmlResultFromMapping(wordColorGiver: Int => Int => Color)(tokens: Seq[ImportantTextPart]): String = { 
 		val maxNbOccurs: Int = 
 			if (tokens.isEmpty) 
 				0
@@ -137,10 +164,12 @@ class TextParser extends RegexParsers {
 				}.max
 
 		val black = "color:rgb(0,0,0)"
+	
+		val wordColorGiverGivenMaxNbOccur = wordColorGiver(maxNbOccurs)
 
 		tokens.foldLeft("") { 
 			case (str, w @ Word(_, nbOccur)) => 
-				val col = colorForWord(nbOccur, maxNbOccurs)
+				val col = wordColorGiverGivenMaxNbOccur(nbOccur)
 				str + wordInfoDiv(w, col)
 			case (str, Punctuations(content)) => 
 				s"""$str<div style="$black; display:inline;">$content</div>"""
@@ -148,6 +177,7 @@ class TextParser extends RegexParsers {
 				str + whitespaceConverter(content)
 		}
 	}
+
 }
 
 /**
@@ -156,6 +186,8 @@ class TextParser extends RegexParsers {
  */
 @Singleton
 class CountOccurences @Inject()(logger: Logger) extends Controller {
+	import ColorUtils._
+
 	implicit val InputTextReads: Reads[InputText] =
 		Json.reads[InputText]
 
@@ -175,7 +207,7 @@ class CountOccurences @Inject()(logger: Logger) extends Controller {
 		textOpt	
 		.map { t =>
 			val wordToNbOccur = textParser.wordOccurrenceMap(t)
-			val htmlResult = textParser.htmlResultFromMapping(wordToNbOccur)
+			val htmlResult = textParser.htmlResultFromMapping(greenToRedGiver)(wordToNbOccur)
 			Ok(htmlResult)
 		}
 		.getOrElse {
