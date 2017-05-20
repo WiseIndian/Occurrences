@@ -1,4 +1,6 @@
 package utils
 
 import java.awt.Color
-case class WordInfos(word: String, color: Color, nbOccurs: Int)
+object TemplateInfos {
+	val nbShades: Int = 5
+}

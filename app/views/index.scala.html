@@ -1,8 +1,9 @@
-@import utils.WordInfos
+@import utils.TemplateInfos._
 @import play.twirl.api.HtmlFormat._
 @import scala.io.Source
+@import java.awt.Color
 
-@(hostName: String)
+@(hostName: String, coldestHue: Float)
 
 <!DOCTYPE html> 
 <html>
@@ -12,12 +13,40 @@
 		<link rel="stylesheet"
 			type="text/css" 
 			href='@routes.Assets.versioned("stylesheets/main.css")'>
+		<style>
+			.colorRectangle {
+				width: @{HtmlFormat.raw((100.0 / nbShades).toString)}%;
+				height: 10px;
+				float: left;
+			}
+		</style>
 		<script src='@routes.Assets.versioned("javascripts/main.js")'></script>
 
 	</head>
 
+
+@{
+
+}
 	<body>
 		<div id="wrapper">
+
+			<h4 id="info"> &#8592; colder colours means less appearances</h3>
+	@{HtmlFormat.raw{(0 until nbShades).foldLeft("") { case(str,index) => 
+		val col = 
+			Color
+			.getHSBColor(coldestHue - (index * coldestHue) / (nbShades - 1), 1f, 1f)
+		val r = col.getRed()
+		val g = col.getGreen()
+		val b = col.getBlue()
+		str + s"""
+			<div style="background-color: rgb($r,$g,$b)"
+				 class="colorRectangle">
+			</div>
+		"""
+	}}}
+			</br>
+
 			<h3 id="info">enter your text here:</h3>
 			<textarea rows="6" id="textInput" class="coolBorder"></textarea>
 			<button id="textSendButton" class="coolBorder">send</button>

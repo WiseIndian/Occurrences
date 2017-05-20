@@ -23,22 +23,26 @@ case class Spaces(val content: String) extends ImportantTextPart
 case class InputText(text: String)
 
 
-
 object ColorUtils {
 	import java.lang.Math._
+
+	val blueHue = 0.7f
 	def greenToRedGiver(maxNbOccurs: Int)(nbOccur: Int): Color = 
 		redToColderColorGiverLogarithmic(0.2f)(maxNbOccurs)(nbOccur)
 
 	def blueToRedGiver(maxNbOccurs: Int)(nbOccur: Int): Color = 
-		redToColderColorGiverLogarithmic(0.7f)(maxNbOccurs)(nbOccur)
+		redToColderColorGiverLogarithmic(blueHue)(maxNbOccurs)(nbOccur)
 
 	def redToColderColorGiverLogarithmic(colderColorHue: Float)(maxNbOccurs: Int)(nbOccur: Int): Color = {
 		val k: Float = (colderColorHue / log(maxNbOccurs)).toFloat
 		
 		val h = {
-			colderColorHue - k * log(nbOccur)
+			val formula = colderColorHue - k * log(nbOccur)
+			if (formula < 0) 0
+			else formula
 		}.toFloat
 		//finding the word color from the hue and arbitrary brightness and saturation parameter 
+		
 		Color.getHSBColor(h, 1f, .9f)
 	}
 
@@ -207,16 +211,17 @@ class CountOccurences @Inject()(logger: Logger) extends Controller {
 		textOpt	
 		.map { t =>
 			val wordToNbOccur = textParser.wordOccurrenceMap(t)
-			val htmlResult = textParser.htmlResultFromMapping(greenToRedGiver)(wordToNbOccur)
+			val htmlResult = 
+				textParser
+				.htmlResultFromMapping(blueToRedGiver)(wordToNbOccur)
 			Ok(htmlResult)
-		}
-		.getOrElse {
+		} .getOrElse {
 			Ok("")	
 		}
 	}
 
 	def homepage() = Action { request => 
-		Ok(views.html.index(hostName=request.host))
+		Ok(views.html.index(hostName=request.host, coldestHue = blueHue))
 	}
 
 
