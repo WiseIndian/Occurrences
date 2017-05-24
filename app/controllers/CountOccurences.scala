@@ -34,16 +34,22 @@ object ColorUtils {
 		redToColderColorGiverLogarithmic(blueHue)(maxNbOccurs)(nbOccur)
 
 	def redToColderColorGiverLogarithmic(colderColorHue: Float)(maxNbOccurs: Int)(nbOccur: Int): Color = {
-		val k: Float = (colderColorHue / log(maxNbOccurs)).toFloat
-		
-		val h = {
-			val formula = colderColorHue - k * log(nbOccur)
-			if (formula < 0) 0
-			else formula
-		}.toFloat
-		//finding the word color from the hue and arbitrary brightness and saturation parameter 
-		
-		Color.getHSBColor(h, 1f, .9f)
+		val b = .9f 
+		val s = 1f
+		if (maxNbOccurs == 1) {
+			Color.getHSBColor(colderColorHue, s, b)
+		} else {	
+			val k: Float = (colderColorHue / log(maxNbOccurs)).toFloat
+			
+			val h = {
+				val formula = colderColorHue - k * log(nbOccur)
+				if (formula < 0) 0
+				else formula
+			}.toFloat
+			//finding the word color from the hue and arbitrary brightness and saturation parameter 
+			
+			Color.getHSBColor(h, s, b)
+		}
 	}
 
 	def redToColderColorGiverLinear(colderColorHue: Float)(nbOccur: Int, maxNbOccurs: Int): Color = {
