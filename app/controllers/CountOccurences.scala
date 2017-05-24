@@ -145,7 +145,6 @@ class TextParser extends RegexParsers {
 	def spaceConverter(s: String): String = {
 		parseAll(spacesParser2, s) match {
 			case Success(e, rest) => 
-				System.out.println("spaces:"+e)
 				e
 			case f: NoSuccess => 
 				System.err.println(f)
