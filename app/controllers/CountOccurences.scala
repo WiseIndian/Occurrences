@@ -49,7 +49,7 @@ object ColorUtils {
 	def redToColderColorGiverLinear(colderColorHue: Float)(nbOccur: Int, maxNbOccurs: Int): Color = {
 		/*
 		* the more occurrences there is, the redder the word becomes.
-		* the words with the least occurences are blue.
+		* the words with the least occurrences are blue.
 		*/
 		val colderColorRatio = 
 			(maxNbOccurs - (nbOccur-1)).toFloat / maxNbOccurs
@@ -107,25 +107,24 @@ class TextParser extends RegexParsers {
 		val r = wordColor.getRed()
 		val g = wordColor.getGreen()
 		val b = wordColor.getBlue()
-		val strRgb = s"""color:rgb($r,$g,$b)"""
+		val strRgb = s"""color:rgb($r,$g,$b)""" ;
 
-		s"""
-		<div class="wordInfo">
-			<div style="$strRgb" class="wordDiv">
-				${w.content}
-			</div>
-			<div class="nbOcc coolBorder">
-				<div style="$strRgb">${w.nbOccur} occurences</div>
-			</div>
-		</div>"""
+		s"""<div class="wordInfo">""" +
+			s"""<div style="$strRgb" class="wordDiv">""" +
+				s"""${w.content}""" +
+			s"""</div>""" +
+			s"""<div class="nbOcc coolBorder">""" +
+				s"""<div style="$strRgb">${w.nbOccur} occurrences</div>""" +
+			s"""</div>""" +
+		s"""</div>"""
 	}
 
 	def convertNewlinesToBr(ls: List[String]): String =  
 		ls.foldLeft(""){ case (str,_) => str+"<br>" }
 	def convertTabs(ls: List[String]): String =
-		ls.foldLeft(""){ case(str,_) => str+"&nbsp&nbsp&nbsp&nbsp&nbsp" }
+		ls.foldLeft(""){ case(str,_) => str+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" }
 	def convertWhiteSpaces(ls: List[String]): String = 
-		ls.foldLeft("") { case(str,_) => str + "&nbsp" }
+		ls.foldLeft("") { case(str,_) => str + "&nbsp;" }
 	//could do a parser for vertical tab but who cares about this character?	
 	def convertFormFeed(ls: List[String]): String = 
 		ls.foldLeft("") { case (str,_) => str + "<br><br>" }
@@ -143,9 +142,10 @@ class TextParser extends RegexParsers {
 		}
 
 
-	def whitespaceConverter(s: String): String = {
+	def spaceConverter(s: String): String = {
 		parseAll(spacesParser2, s) match {
 			case Success(e, rest) => 
+				System.out.println("spaces:"+e)
 				e
 			case f: NoSuccess => 
 				System.err.println(f)
@@ -178,7 +178,7 @@ class TextParser extends RegexParsers {
 			case (str, Punctuations(content)) => 
 				s"""$str<div style="$black; display:inline;">$content</div>"""
 			case (str, Spaces(content)) => 
-				str + whitespaceConverter(content)
+				str + spaceConverter(content)
 		}
 	}
 

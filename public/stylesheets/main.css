@@ -14,6 +14,9 @@ body {
 
 #textInput {
 	width: 100%;
+	min-height: 100px;
+	display: block;
+	background-color: white;
 }
 
 
