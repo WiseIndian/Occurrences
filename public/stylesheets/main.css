@@ -1,21 +1,27 @@
-body {
+body, html {
 	font-family: arial;
+	height: 100vh;
 }
 
 
 #wrapper {
 	margin: auto;
 	width: 50%;
+	height: 80%;
 }
 
-#info {
+.info {
 	text-align: center;
+	display: block;
+}
+
+#info2 {
+	padding-top: 20px;
 }
 
 #textInput {
 	width: 100%;
-	min-height: 100px;
-	display: block;
+	min-height: 50%;
 	background-color: white;
 	word-wrap: break-word;
 }
@@ -58,10 +64,12 @@ body {
 	display: inline;
 }
 
-.footerChild {
-	position: absolute;
-	margin: 0;
-	bottom: 0;
+#header {
+}
+
+#header > * {
+	display: block;
+	text-align: center;
 }
 
 #meInfo {
@@ -76,26 +84,27 @@ body {
 }
 
 
-a.footerChild {
+a.headerChild {
 	right: 0px;	
 }
 
 /*the github repo svg*/
-.footerChild object {
+#header object{
 	height: 15px;
 	width: 15px;
 	pointer-events: none;
 }
 
 
+@media screen and (max-width: 400px) {
+	#wrapper {
+		width: 100%;
+	}
+}
 
 
-
-
-
-
-
-
-
-
-
+@media screen and (min-width: 400px) and (max-width: 600px) {
+	#wrapper {
+		width: 70%;
+	}
+}

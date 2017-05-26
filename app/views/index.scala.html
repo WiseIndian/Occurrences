@@ -29,9 +29,20 @@
 
 }
 	<body>
+		<div id="header"> 
+			<h5 id="meInfo">by <a href="https://www.linkedin.com/in/simon-le-bail-collet-a6767212b">slbc</a></h5>
+			<!--there should be a link inside of the svg to the github homepage-->
+			<a href="https://github.com/simonchelbc/Occurrences">
+				<object  
+					data='@routes.Assets.versioned("images/github.svg")'
+					type="image/svg+xml">
+				</object>
+			</a>
+		</div>
+
 		<div id="wrapper">
 
-			<h4 id="info"> &#8592; colder colours means less appearances</h3>
+			<h4 id="info1" class="info"> &#8592; colder colours means less appearances</h3>
 	@{HtmlFormat.raw{(0 until nbShades).foldLeft("") { case(str,index) => 
 		val col = 
 			Color
@@ -45,22 +56,10 @@
 			</div>
 		"""
 	}}}
-			</br>
-
-			<h3 id="info">enter your text here:</h3>
+			<h3 id="info2" class="info">enter your text here:</h3>
 			<div id="textInput" class="coolBorder" contenteditable="true"></div>
 			<button id="textSendButton" class="coolBorder">send</button>
 		</div>
 	
-		<div id="footer"> 
-			<h5 id="meInfo" class="footerChild">by <a href="https://www.linkedin.com/in/simon-le-bail-collet-a6767212b">slbc</a></h5>
-			<!--there should be a link inside of the svg to the github homepage-->
-			<a href="https://github.com/simonchelbc/Occurrences" class="footerChild">
-				<object  
-					data='@routes.Assets.versioned("images/github.svg")'
-					type="image/svg+xml">
-				</object>
-			</a>
-		</div>
 	</body>
 </html>
