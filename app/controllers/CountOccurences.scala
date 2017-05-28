@@ -210,7 +210,7 @@ class CountOccurences @Inject()(logger: Logger) extends Controller {
 
 		//logging text
 		textOpt.foreach { t =>
-			logger.log(t, "logFile")
+			logger.log(t)
 		}
 
 		textOpt	

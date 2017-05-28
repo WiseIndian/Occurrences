@@ -1,16 +1,18 @@
 package services
 
 import javax.inject._
-import java.util.concurrent.ExecutorService
 import java.nio.charset.Charset
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.lang.InterruptedException
+import java.lang.NullPointerException
+import java.lang.IllegalArgumentException
+import java.lang.ClassCastException
+
 
 
 //a Runnable class writing an inputText to a certain file
-class WriterJob(val inputText: String, val fileName: String) extends java.util.concurrent.Callable[Unit] {
-        def call() {
-                printToFile(new java.io.File(fileName))(_.println("r=> "+inputText))
-        }
-
+object WriteUtils {
         def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
                 val fw = new java.io.FileOutputStream(f, true) // true allows appending data to current file content
 		val osw = new java.io.OutputStreamWriter(
@@ -23,13 +25,35 @@ class WriterJob(val inputText: String, val fileName: String) extends java.util.c
         }
 }
 
-trait Logger {
-	val threadPool: ExecutorService
+/* 
+ * using the consumer producer concurrent design pattern described at 
+ * http://javarevisited.blogspot.ch/2012/02/producer-consumer-design-pattern-with.html
+ */
+class Consumer(val sharedQueue: BlockingQueue[String], filename: String) extends Runnable{
+	import WriteUtils._
 
-	def log(inputText: String, fileName: String) {
-		threadPool.submit(new WriterJob(inputText, fileName))
+	val file = new java.io.File(filename)	
+
+	def println(str: String) = printToFile(file)(pw => pw.println(str))
+
+	override def run() {
+		while(true){
+			val input: String = 
+				try {
+					sharedQueue.take()
+				} catch {
+					case e: InterruptedException => 
+						System.err.println(e)
+				}
+			println(input)
+		}
 	}
 }
+
+trait Logger {
+	def log(inputText: String): Unit
+}
+
 /**
  * This class has a `Singleton` annotation because we need to make
  * sure we only use one logger per application. Without this
@@ -37,7 +61,23 @@ trait Logger {
  * injected.
  */
 @Singleton
-class ConcreteLogger extends Logger {  
-	override val threadPool: ExecutorService =
-		java.util.concurrent.Executors.newFixedThreadPool(20)
+class ConcurrentSingleFileLogger() extends Logger {  
+	val sharedQueue: BlockingQueue[String] = new LinkedBlockingQueue[String]()
+
+	new Thread(new Consumer(sharedQueue, filename="logFile")).start()
+
+	override def log(inputText: String) {
+		try {
+			sharedQueue.put(inputText)
+		} catch {
+			case e: InterruptedException => 
+				System.err.println(e)
+			case e: NullPointerException => 
+				System.err.println(e)
+			case e: ClassCastException => 
+				System.err.println(e)
+			case e: IllegalArgumentException => 
+				System.err.println(e)
+		}
+	}
 }
