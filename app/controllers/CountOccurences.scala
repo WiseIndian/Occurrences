@@ -1,6 +1,7 @@
 package controllers
 
 
+import play.api.libs.concurrent.Execution.Implicits._
 import util.parsing.combinator.RegexParsers
 import scala.collection.mutable.Buffer
 import javax.inject._
@@ -11,6 +12,7 @@ import play.api.libs.json._
 import scala.io.Source
 import java.awt.Color
 import services.Logger
+import services.StemmerUser
 
 
 trait ImportantTextPart {
@@ -20,7 +22,6 @@ case class Word (val content: String, nbOccur: Int) extends ImportantTextPart
 case class Punctuations (val content: String) extends ImportantTextPart 
 case class Spaces(val content: String) extends ImportantTextPart
 
-case class InputText(text: String)
 
 
 object ColorUtils {
@@ -77,7 +78,7 @@ class TextParser extends RegexParsers {
 	lazy val token: Parser[ImportantTextPart] = spacesParser1 ||| word ||| punctuation
 	lazy val textParser: Parser[List[ImportantTextPart]] = rep(token)
 
-        def wordOccurrenceMap(text: String): Seq[ImportantTextPart] = {
+        def wordOccurrenceMap(groupByFunc: String => String)(text: String): Seq[ImportantTextPart] = {
 		val parts: List[ImportantTextPart] = parseAll(textParser, text) match {
 			case Success(e, _) => 
 				e
@@ -93,14 +94,15 @@ class TextParser extends RegexParsers {
 				case w: Word => true 
 				case _ => false
 			}
-			.groupBy(w => w.content.toLowerCase)
+			.groupBy(w => groupByFunc(w.content))
 			.mapValues(_.size)
+		System.out.println(wordsOccurrences)
 
                 parts.map { 
 			case Word(content, _) =>
 				val wNbOcc = 
 					wordsOccurrences
-					.getOrElse(content.toLowerCase, 0)
+					.getOrElse(groupByFunc(content), 0)
 				Word(content, wNbOcc)
 			case other => other
                 }
@@ -189,12 +191,13 @@ class TextParser extends RegexParsers {
 
 }
 
+case class InputText(text: String)
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
-class CountOccurences @Inject()(logger: Logger) extends Controller {
+class CountOccurences @Inject()(logger: Logger, stemmer: StemmerUser) extends Controller {
 	import ColorUtils._
 
 	implicit val InputTextReads: Reads[InputText] =
@@ -202,27 +205,46 @@ class CountOccurences @Inject()(logger: Logger) extends Controller {
 
 	val textParser: TextParser = new TextParser()
 
+	/*TODO parse this json object:
+	                        {
+                                text: textValue,
+                                isDaltonian: isDaltonianValue,
+                                selectedLang: selectedLangVal
+                        }
+	*/
 	def occurs() = Action(BodyParsers.parse.json) { request => 
-		val textResult: JsResult[InputText] = 
-			request.body.validate[InputText]
 
-		val textOpt: Option[String] = textResult.asOpt.map(_.text)
+		val jsonBody: JsValue = request.body
 
-		//logging text
-		textOpt.foreach { t =>
-			logger.log(t)
+		val text: String = 
+			(jsonBody \ "text").as[String]
+
+		val isDaltonian: String =  
+			(jsonBody \ "isDaltonian").as[String]
+
+		val selectedLang: String = 
+			(jsonBody \ "selectedLang").as[String]
+
+		//logging text, this doesnt take long as its just about passing
+		//a text to a service which adds the text to the blocking queue
+		//of texts to be written to the logfile by yet another thread
+		logger.log(text)
+
+		val colorFunction: Int => Int => Color = 
+			if(isDaltonian.equals("false")) greenToRedGiver
+			else blueToRedGiver
+
+		def groupByFunc(w: String): String = {
+			val lwc: String = w.toLowerCase
+			if (selectedLang.equals("english")) stemmer.stemWord(lwc)
+			else lwc
 		}
 
-		textOpt	
-		.map { t =>
-			val wordToNbOccur = textParser.wordOccurrenceMap(t)
-			val htmlResult = 
-				textParser
-				.htmlResultFromMapping(blueToRedGiver)(wordToNbOccur)
-			Ok(htmlResult)
-		} .getOrElse {
-			Ok("")	
-		}
+		val wordToNbOccur = textParser.wordOccurrenceMap(groupByFunc)(text)
+		val htmlResult = 
+			textParser
+			.htmlResultFromMapping(colorFunction)(wordToNbOccur)
+		Ok(htmlResult)
 	}
 
 	def homepage() = Action { request => 

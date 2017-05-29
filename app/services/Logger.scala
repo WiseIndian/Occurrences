@@ -38,14 +38,14 @@ class Consumer(val sharedQueue: BlockingQueue[String], filename: String) extends
 
 	override def run() {
 		while(true){
-			val input: String = 
-				try {
+			try {
+				val input: String = 
 					sharedQueue.take()
-				} catch {
-					case e: InterruptedException => 
-						System.err.println(e)
-				}
-			println(input)
+				println(input)
+			} catch {
+				case e: InterruptedException => 
+					System.err.println(e)
+			}
 		}
 	}
 }

@@ -1,9 +1,4 @@
-document.addEventListener("DOMContentLoaded", function(event) { 
-	//sends the input text to the server to process it 
-	//so to receive a coloured version of the text
-	document
-	.getElementById("textSendButton")
-	.addEventListener("click", function(event) {
+function createJSONContent() {
 		var textInput = document.getElementById("textInput");
 		var textHTML = textInput.innerHTML;
 		var textValue = 
@@ -12,7 +7,34 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			.replace(/\d* occurrences/g, '')
 			.replace(/\u00A0/g, ' ');//this replaces all non breaking spaces in unicode format into normal white spaces. The non-breaking spaces interfere with the java/scala server parser in such a way that the parser doesnt recognize a nbsp as a character pertaining to the \s character class. Since the server inserts nbsp in the response to the post request if the client sends the response back to the server as an input it will on separating words! This was a headache to fix.
 			
-		var str_json = JSON.stringify({text: textValue});
+		var isDaltonianValue = "false";
+
+		if (document.getElementById("daltonian").checked)
+			isDaltonianValue = "true";
+
+		var langSelect =
+			 document
+			.getElementById("languageChoice")
+		var selectedLangVal = langSelect.options[langSelect.selectedIndex].value 
+
+		var str_json = JSON.stringify(
+			{	
+				text: textValue,
+				isDaltonian: isDaltonianValue,
+				selectedLang: selectedLangVal
+			}
+		);
+
+		return str_json;
+}
+document.addEventListener("DOMContentLoaded", function(event) { 
+	//sends the input text to the server to process it 
+	//so to receive a coloured version of the text
+	document
+	.getElementById("textSendButton")
+	.addEventListener("click", function(event) {
+
+		var str_json = createJSONContent();
 		var request= new XMLHttpRequest();
 		request.open("POST", window.location.href+"result", true);
 		request.setRequestHeader("Content-type", "application/json");
@@ -22,16 +44,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 				var coloredText = this.response;
 				textInput	
 				.innerHTML = coloredText;
-
-				positionObjects();
 			}
 		};
-		console.log(textValue);
 		request.send(str_json);
 	});
-
-				
-
-
 
 });
