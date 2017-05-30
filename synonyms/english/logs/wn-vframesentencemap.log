@@ -1,0 +1,5 @@
+[E] wn-wn-vframesentencemap-write-vframe-sentence-mapping>sentidx.vrb:123 vframesentencemapping=[id=113 sensekey=ask%2:32:00::] exception=[NoSuchElementException] message=[ask%2:32:00::]
+[E] wn-wn-vframesentencemap-write-vframe-sentence-mapping>sentidx.vrb:411 vframesentencemapping=[id=85 sensekey=canalize%2:38:00::] exception=[NoSuchElementException] message=[canalize%2:38:00::]
+[E] wn-wn-vframesentencemap-write-vframe-sentence-mapping>sentidx.vrb:689 vframesentencemapping=[id=152 sensekey=crawl%2:38:00::] exception=[MySQLIntegrityConstraintViolationException] message=[Duplicate entry '201889838-31274-152' for key 'PRIMARY']
+[E] wn-wn-vframesentencemap-write-vframe-sentence-mapping>sentidx.vrb:807 vframesentencemapping=[id=126 sensekey=demolish%2:37:00::] exception=[NoSuchElementException] message=[demolish%2:37:00::]
+[E] wn-wn-vframesentencemap-write-vframe-sentence-mapping>sentidx.vrb:3403 vframesentencemapping=[id=115 sensekey=write%2:36:02::] exception=[NoSuchElementException] message=[write%2:36:02::]

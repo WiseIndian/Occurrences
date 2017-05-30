@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>WordNet SQL Builder</title>
+<meta name="author" content="Bernard Bou">
+<meta name="created" content="20050201;12154260">
+<meta name="changedby" content="Bernard Bou">
+<meta name="changed" content="20131205;10000000">
+<meta name="keywords" content="wordnet,sql">
+<link rel="stylesheet" href="wordnet-style.css" type="text/css">
+</head>
+<body>
+<table width="100%" border="0">
+  <tbody>
+    <tr>
+      <td class="color1" width="25%">&nbsp;</td>
+      <td class="color2" width="25%">&nbsp;</td>
+      <td class="color3" width="25%">&nbsp;</td>
+      <td class="color4" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+      <td colspan="4"><p align="center"><img src="images/wnlogo.gif" alt="wordnet" width="279" height="92"><br>
+</p></td>
+    </tr>
+    <tr>
+      <td colspan="4"><p align="center"> <span class="color4"><b>wordnet sql builder </b></span><br>
+          <span class="subtitle">Bernard Bou</span><br>
+      <a href="mailto:bbou@ac-toulouse.fr">bbou@ac-toulouse.fr</a></p></td>
+    </tr>
+    <tr>
+      <td class="color1" width="25%">&nbsp;</td>
+      <td class="color2" width="25%">&nbsp;</td>
+      <td class="color3" width="25%">&nbsp;</td>
+      <td class="color4" width="25%">&nbsp;</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+
+<div class="header"><a name="database"><strong>DATABASE</strong></a></div>
+
+<ul>
+<li>1-select and download the modules from the <a href="http://sourceforge.net/projects/wnsql/files/wnsqlbuilder/">download area</a> into a common space</li>
+<li>2-decompress the zip files</li>
+<li>3-run <i>restore-[mysql|postgresql][bat|sh]</i></li>
+</ul>
+<p>- disregard warnings about overwriting the <i>restore-[mysql|posgresql][bat|sh]</i> files : these are actually the same in all packages.</p>
+<p>- the modules are the following:</p>
+<div align="center">
+<table class="grid" align="center"><tbody>
+
+<tr>
+<th class="grid">wn</th>
+<td class="grid">WordNet core</td>
+<td class="grid">this is the core module : it is <strong>required</strong> by others.</td>
+</tr>
+
+<tr>
+<th class="grid">legacy</th>
+<td class="grid">legacy wordnet</td>
+<td class="grid">legacy senses, sensemaps and synsetmaps to target version</td>
+</tr>
+
+<tr>
+<th class="grid">vn</th>
+<td class="grid">VerbNet</td>
+<td class="grid">VerbNet, a class-based verb lexicon (<a href="http://verbs.colorado.edu/~mpalmer/projects/verbnet.html">VerbNet</a>)</td>
+</tr>
+
+<tr>
+<th class="grid">bnc</th>
+<td class="grid">British National Corpus</td>
+<td class="grid">BNC statistical data</td>
+</tr>
+
+<tr>
+<th class="grid">xwn</th>
+<td class="grid">XWordNet</td>
+<td class="grid">Extended WordNet (<a href="http://xwn.hlt.utdallas.edu/">XWordNet</a>)</td>
+</tr>
+
+<tr>
+<th class="grid">glf</th>
+<td class="grid">GlossLF</td>
+<td class="grid">Gloss logical forms (<a href="http://www.princeton.edu/wordnet/download/standoff/">WordNet standoff files</a>)</td>
+</tr>
+
+<tr>
+<th class="grid">ilfwn</th>
+<td class="grid">ILFWN</td>
+<td class="grid">Intermediate logical forms for WordNet (<a href="http://nlp.uned.es/semantics/ilf/ilf.html">ILFWN</a>)</td>
+</tr>
+
+<tr>
+<th class="grid">sumo</th>
+<td class="grid">SUMO</td>
+<td class="grid">Suggested Upper Merged Ontology (<a href="http://www.ontologyportal.org/">SUMO</a>)</td>
+</tr>
+
+</tbody></table>
+</div>
+<p>- unless you modify the scripts you'll need to have MySQL <i>root</i> or PostgreSQL <i>postgres</i> access</p>
+
+<div class="header"><a name="builder"><strong>BUILDER</strong></a></div>
+
+<p><strong>LAUNCH</strong></p>
+<p>java -classpath {modulejar*,driverjar, supportlibjars} org.wnsql.builder.Builder -data:data.properties -jdbc:jdbc.properties -todo:todo.properties [action]</p>
+
+<p><strong>ACTION</strong></p>
+<p>A list of action parameters is available when the above is run with no action parameter.</p>
+
+<p><strong>PROPERTY FILES</strong></p>
+<p>Please refer to example property files.</p>
+<table class="grid">
+<tbody>
+<tr class="grid"><td class="grid">data conf file</td><td class="grid">defines where the homes to data are located</td></tr>
+<tr class="grid"><td class="grid">jdbc conf file</td><td class="grid">defines JDBC settings such as database url, user, password, ...</td></tr>
+<tr class="grid"><td class="grid">todo conf files</td><td class="grid">defines what are the active modules and what they do</td></tr>
+</tbody>
+</table>
+
+</body>
+</html>
+
