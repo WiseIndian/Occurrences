@@ -96,7 +96,6 @@ class TextParser extends RegexParsers {
 			}
 			.groupBy(w => groupByFunc(w.content))
 			.mapValues(_.size)
-		System.out.println(wordsOccurrences)
 
                 parts.map { 
 			case Word(content, _) =>
@@ -205,13 +204,6 @@ class CountOccurences @Inject()(logger: Logger, stemmer: StemmerUser) extends Co
 
 	val textParser: TextParser = new TextParser()
 
-	/*TODO parse this json object:
-	                        {
-                                text: textValue,
-                                isDaltonian: isDaltonianValue,
-                                selectedLang: selectedLangVal
-                        }
-	*/
 	def occurs() = Action(BodyParsers.parse.json) { request => 
 
 		val jsonBody: JsValue = request.body
