@@ -110,18 +110,18 @@ class TextParser extends RegexParsers {
 
 
 
-	def wordInfoDiv(w: Word, wordColor: Color): String = {
+	def wordInfo(w: Word, wordColor: Color): String = {
 		val r = wordColor.getRed()
 		val g = wordColor.getGreen()
 		val b = wordColor.getBlue()
 		val strRgb = s"""color:rgb($r,$g,$b)""" ;
 
-		s"""<div class="wordInfo">""" +
-			s"""<div style="$strRgb" class="wordDiv">""" +
+		s"""<div style="$strRgb" class="wordInfo">""" +
+			s"""<div class="word">""" +
 				s"""${w.content}""" +
 			s"""</div>""" +
-			s"""<div class="nbOcc coolBorder">""" +
-				s"""<div style="$strRgb">${w.nbOccur} occurrences</div>""" +
+			s"""<div class="nbOcc coolBorder" style="$strRgb">""" +
+				s"""${w.nbOccur} occurrences""" +
 			s"""</div>""" +
 		s"""</div>"""
 	}
@@ -129,9 +129,9 @@ class TextParser extends RegexParsers {
 	def convertNewlinesToBr(ls: List[String]): String =  
 		ls.foldLeft(""){ case (str,_) => str+"<br>" }
 	def convertTabs(ls: List[String]): String =
-		ls.foldLeft(""){ case(str,_) => str+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" }
+		ls.foldLeft(""){ case(str,_) => str+ s"""<div class="tab"></div>""" }
 	def convertWhiteSpaces(ls: List[String]): String = 
-		ls.foldLeft("") { case(str,_) => str + "&nbsp;" }
+		ls.foldLeft("") { case(str,_) => str + s"""<div class="space"></div>""" }
 	//could do a parser for vertical tab but who cares about this character?	
 	def convertFormFeed(ls: List[String]): String = 
 		ls.foldLeft("") { case (str,_) => str + "<br><br>" }
@@ -180,9 +180,9 @@ class TextParser extends RegexParsers {
 		tokens.foldLeft("") { 
 			case (str, w @ Word(_, nbOccur)) => 
 				val col = wordColorGiverGivenMaxNbOccur(nbOccur)
-				str + wordInfoDiv(w, col)
+				str + wordInfo(w, col)
 			case (str, Punctuations(content)) => 
-				s"""$str<div style="$black; display:inline;">$content</div>"""
+				s"""$str<div style="$black;" class="punctuation">$content</div>"""
 			case (str, Spaces(content)) => 
 				str + spaceConverter(content)
 		}

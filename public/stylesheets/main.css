@@ -20,6 +20,12 @@ body, html {
 	padding-top: 20px;
 }
 
+.coolBorder {
+	border: solid rgb(102, 128, 0) 2px;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+}
+
 #textInput {
 	width: 100%;
 	min-height: 50%;
@@ -27,42 +33,41 @@ body, html {
 	word-wrap: break-word;
 }
 
+.punctuation {
+	display: inline-block;
+}
+
+.space {
+	display: inline-block;
+	width: 1ch;
+}
+
+.tabs {
+	display: inline-block;
+	width: 4ch;
+}
+
+.wordInfo {
+	position: relative;
+	display: inline-block;
+}
+
+.wordInfo:hover .nbOcc{
+	display: block;
+}
+
+.nbOcc {
+	display: none;
+	position: absolute;
+	background-color: #fff; 
+	z-index: 10;
+}
 
 #textSendButton {
 	display: block;
 	width: 100%;
 	background-color: white;
 	font: inherit;
-}
-
-.coolBorder {
-	border: solid rgb(102, 128, 0) 2px;
-}
-
-#result {
-	text-align: left;
-}
-
-.wordInfo {
-	display: inline;
-	position: relative;
-}
-
-.wordInfo:hover .nbOcc{
-	display: block;
-	position: absolute;
-	left: 0;
-}
-
-.wordInfo .nbOcc {
-	display: none;
-	background-color: #fff; 
-	z-index: 10;
-	white-space: nowrap; /*wtf is that?*/
-}
-
-.wordDiv {
-	display: inline;
 }
 
 #header {

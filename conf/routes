@@ -3,9 +3,11 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.CountOccurences.homepage()
+GET     /			controllers.CountOccurences.homepage()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file		controllers.Assets.versioned(path="/public", file: Asset)
 
-POST	/result			    controllers.CountOccurences.occurs()
+POST	/result			controllers.CountOccurences.occurs()
+
+POST	/synonyms		controllers.Synonyms.synonyms()
